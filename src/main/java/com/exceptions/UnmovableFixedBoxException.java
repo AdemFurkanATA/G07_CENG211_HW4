@@ -15,52 +15,57 @@ package com.exceptions;
  */
 public class UnmovableFixedBoxException extends Exception {
 
-    private String boxLocation;  // The location of the FixedBox (e.g., "R3-C8")
-    private String attemptedAction;  // The action that was attempted (e.g., "roll", "flip")
+    private static final long serialVersionUID = 1L;
+
+    private final String boxLocation;
+    private final String attemptedAction;
 
     /**
      * Constructs a new UnmovableFixedBoxException with a default message.
      */
     public UnmovableFixedBoxException() {
         super("HOWEVER, IT IS FIXED BOX AND CANNOT BE MOVED. Continuing to the next turn...");
+        this.boxLocation = null;
+        this.attemptedAction = null;
     }
 
     /**
      * Constructs a new UnmovableFixedBoxException with a custom message.
-     *
      * @param message The detail message explaining why the exception occurred
      */
     public UnmovableFixedBoxException(String message) {
-        super(message);
+        super(message != null ? message : "HOWEVER, IT IS FIXED BOX AND CANNOT BE MOVED. Continuing to the next turn...");
+        this.boxLocation = null;
+        this.attemptedAction = null;
     }
 
     /**
      * Constructs a new UnmovableFixedBoxException with a custom message and the box location.
-     *
      * @param message The detail message
      * @param boxLocation The location of the FixedBox (e.g., "R3-C8")
      */
     public UnmovableFixedBoxException(String message, String boxLocation) {
-        super(message);
-        this.boxLocation = boxLocation;
+        super(message != null ? message : "HOWEVER, IT IS FIXED BOX AND CANNOT BE MOVED. Continuing to the next turn...");
+
+        this.boxLocation = boxLocation != null ? boxLocation : null;
+        this.attemptedAction = null;
     }
 
     /**
      * Constructs a new UnmovableFixedBoxException with full details.
-     *
      * @param message The detail message
      * @param boxLocation The location of the FixedBox
      * @param attemptedAction The action that was attempted (e.g., "roll", "flip")
      */
     public UnmovableFixedBoxException(String message, String boxLocation, String attemptedAction) {
-        super(message);
-        this.boxLocation = boxLocation;
-        this.attemptedAction = attemptedAction;
+        super(message != null ? message : "HOWEVER, IT IS FIXED BOX AND CANNOT BE MOVED. Continuing to the next turn...");
+
+        this.boxLocation = boxLocation != null ? boxLocation : null;
+        this.attemptedAction = attemptedAction != null ? attemptedAction : null;
     }
 
     /**
      * Gets the location of the FixedBox that couldn't be moved.
-     *
      * @return The box location string, or null if not set
      */
     public String getBoxLocation() {
@@ -68,17 +73,7 @@ public class UnmovableFixedBoxException extends Exception {
     }
 
     /**
-     * Sets the location of the FixedBox.
-     *
-     * @param boxLocation The box location (e.g., "R3-C8")
-     */
-    public void setBoxLocation(String boxLocation) {
-        this.boxLocation = boxLocation;
-    }
-
-    /**
      * Gets the action that was attempted on the FixedBox.
-     *
      * @return The attempted action (e.g., "roll", "flip"), or null if not set
      */
     public String getAttemptedAction() {
@@ -86,11 +81,29 @@ public class UnmovableFixedBoxException extends Exception {
     }
 
     /**
-     * Sets the action that was attempted.
-     *
-     * @param attemptedAction The attempted action
+     * Returns a detailed string representation of this exception.
+     * @return String containing exception details
      */
-    public void setAttemptedAction(String attemptedAction) {
-        this.attemptedAction = attemptedAction;
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getClass().getName());
+
+        String message = getMessage();
+        if (message != null) {
+            sb.append(": ").append(message);
+        }
+
+        if (boxLocation != null) {
+            sb.append(" [Location: ").append(boxLocation);
+
+            if (attemptedAction != null) {
+                sb.append(", Attempted Action: ").append(attemptedAction);
+            }
+
+            sb.append("]");
+        }
+
+        return sb.toString();
     }
 }

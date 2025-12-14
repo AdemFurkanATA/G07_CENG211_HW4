@@ -17,10 +17,10 @@ public class BoxPuzzle {
 
     private static final int MAX_TURNS = 5;
 
-    private BoxGrid grid;
-    private Letter targetLetter;
+    private final BoxGrid grid;
+    private final Letter targetLetter;
     private int currentTurn;
-    private GameMenu menu;
+    private final GameMenu menu;
     private boolean gameOver;
 
     /**
@@ -33,6 +33,30 @@ public class BoxPuzzle {
         this.currentTurn = 0;
         this.menu = new GameMenu();
         this.gameOver = false;
+    }
+
+    /**
+     * Gets the current turn number.
+     * @return Current turn number (1-5)
+     */
+    public int getCurrentTurn() {
+        return currentTurn;
+    }
+
+    /**
+     * Gets the target letter.
+     * @return The target letter
+     */
+    public Letter getTargetLetter() {
+        return targetLetter;
+    }
+
+    /**
+     * Checks if the game is over.
+     * @return true if game is over, false otherwise
+     */
+    public boolean isGameOver() {
+        return gameOver;
     }
 
     /**
@@ -89,7 +113,6 @@ public class BoxPuzzle {
 
     /**
      * Displays the game over message and final statistics.
-     *
      * @param success true if game completed successfully, false if failed
      */
     private void displayGameOver(boolean success) {
@@ -110,10 +133,11 @@ public class BoxPuzzle {
     /**
      * Inner class that handles all menu operations and user interactions.
      * This demonstrates the use of Inner Classes as required by the assignment.
+     * maintains encapsulation through controlled access
      */
     private class GameMenu {
 
-        private Scanner scanner;
+        private final Scanner scanner;
 
         /**
          * Constructor for GameMenu.
@@ -158,7 +182,12 @@ public class BoxPuzzle {
         private void viewBoxSurfaces() {
             while (true) {
                 System.out.print("Please enter the location of the box you want to view: ");
-                String location = scanner.nextLine().trim();
+                String location = scanner.nextLine();
+
+                if (location == null || location.trim().isEmpty()) {
+                    System.out.println("INCORRECT INPUT: Empty location. Please try again.");
+                    continue;
+                }
 
                 int[] coords = BoxGrid.parseLocation(location);
                 if (coords == null) {
@@ -179,7 +208,6 @@ public class BoxPuzzle {
 
         /**
          * Executes the first stage of a turn: rolling boxes from an edge.
-         *
          * @throws UnmovableFixedBoxException if a FixedBox is selected from edge
          */
         public void firstStage() throws UnmovableFixedBoxException {
@@ -191,7 +219,12 @@ public class BoxPuzzle {
             // Get valid edge box
             while (true) {
                 System.out.print("Please enter the location of the edge box you want to roll: ");
-                String location = scanner.nextLine().trim();
+                String location = scanner.nextLine();
+
+                if (location == null || location.trim().isEmpty()) {
+                    System.out.print("INCORRECT INPUT: Empty location. Please reenter the location: ");
+                    continue;
+                }
 
                 coords = BoxGrid.parseLocation(location);
                 if (coords == null) {
@@ -205,8 +238,14 @@ public class BoxPuzzle {
                 }
 
                 selectedBox = grid.getBox(coords[0], coords[1]);
+                if (selectedBox == null) {
+                    System.out.print("INCORRECT INPUT: No box at this location. Please reenter the location: ");
+                    continue;
+                }
+
                 break;
             }
+
 
             // Check if it's a FixedBox
             if (!selectedBox.canRoll()) {
@@ -234,7 +273,15 @@ public class BoxPuzzle {
                         availableDirections.get(1).getDisplayName() + ": ");
 
                 while (true) {
-                    String choice = scanner.nextLine().trim();
+                    String choice = scanner.nextLine();
+
+                    if (choice == null || choice.trim().isEmpty()) {
+                        System.out.print("INCORRECT INPUT: Empty choice. Please enter 1 or 2: ");
+                        continue;
+                    }
+
+                    choice = choice.trim();
+
                     if (choice.equals("1")) {
                         chosenDirection = availableDirections.get(0);
                         break;
@@ -249,6 +296,7 @@ public class BoxPuzzle {
                 // Edge box - only one direction
                 chosenDirection = availableDirections.get(0);
             }
+
 
             // Roll the boxes
             grid.rollBoxesFromEdge(coords[0], coords[1], chosenDirection);
@@ -284,6 +332,10 @@ public class BoxPuzzle {
          * Checks if the rolling was stopped by a FixedBox.
          */
         private boolean checkIfStoppedByFixedBox(int startRow, int startCol, Direction direction) {
+            if (direction == null) {
+                return false;
+            }
+
             int row = startRow;
             int col = startCol;
 
@@ -305,7 +357,6 @@ public class BoxPuzzle {
         /**
          * Executes the second stage of a turn: opening a box and using a tool.
          * Uses generics for tool handling as required by the assignment.
-         *
          * @throws EmptyBoxException if the box is empty
          * @throws UnmovableFixedBoxException if trying to flip a FixedBox
          * @throws BoxAlreadyFixedException if trying to fix an already-fixed box
@@ -320,7 +371,12 @@ public class BoxPuzzle {
             // Get valid rolled box
             while (true) {
                 System.out.print("Please enter the location of the box you want to open: ");
-                String location = scanner.nextLine().trim();
+                String location = scanner.nextLine();
+
+                if (location == null || location.trim().isEmpty()) {
+                    System.out.print("INCORRECT INPUT: Empty location. Please reenter the location: ");
+                    continue;
+                }
 
                 coords = BoxGrid.parseLocation(location);
                 if (coords == null) {
@@ -330,6 +386,11 @@ public class BoxPuzzle {
 
                 selectedBox = grid.getBox(coords[0], coords[1]);
 
+                if (selectedBox == null) {
+                    System.out.print("INCORRECT INPUT: No box at this location. Please reenter the location: ");
+                    continue;
+                }
+
                 if (!selectedBox.wasRolledThisTurn()) {
                     System.out.print("INCORRECT INPUT: The chosen box was not rolled during the first stage. Please reenter the location: ");
                     continue;
@@ -338,12 +399,15 @@ public class BoxPuzzle {
                 break;
             }
 
+
             // Open the box
             String location = "R" + (coords[0] + 1) + "-C" + (coords[1] + 1);
+
+            @SuppressWarnings("unchecked")
             T acquiredTool = (T) selectedBox.open();
 
             if (acquiredTool == null) {
-                throw new EmptyBoxException("BOX IS EMPTY! Continuing to the next turn...");
+                throw new EmptyBoxException("BOX IS EMPTY! Continuing to the next turn...", location);
             }
 
             // Tool acquired
@@ -358,11 +422,14 @@ public class BoxPuzzle {
         /**
          * Uses the acquired tool with polymorphism and generics.
          * This method demonstrates the required use of generics and polymorphism.
-         *
          * @param tool The tool to use (generic type T extends SpecialTool)
          */
         private <T extends SpecialTool> void useTool(T tool)
                 throws UnmovableFixedBoxException, BoxAlreadyFixedException {
+
+            if (tool == null) {
+                throw new IllegalArgumentException("Tool cannot be null");
+            }
 
             if (tool instanceof PlusShapeStamp) {
                 usePlusShapeStamp((PlusShapeStamp) tool);
@@ -383,7 +450,12 @@ public class BoxPuzzle {
         private void usePlusShapeStamp(PlusShapeStamp tool) {
             while (true) {
                 System.out.print("Please enter the location of the box to use this SpecialTool: ");
-                String location = scanner.nextLine().trim();
+                String location = scanner.nextLine();
+
+                if (location == null || location.trim().isEmpty()) {
+                    System.out.println("INCORRECT INPUT: Empty location. Please try again.");
+                    continue;
+                }
 
                 int[] coords = BoxGrid.parseLocation(location);
                 if (coords == null) {
@@ -404,7 +476,12 @@ public class BoxPuzzle {
         private void useMassRowStamp(MassRowStamp tool) {
             while (true) {
                 System.out.print("Please enter the row to stamp (e.g., R3 or 3): ");
-                String input = scanner.nextLine().trim();
+                String input = scanner.nextLine();
+
+                if (input == null || input.trim().isEmpty()) {
+                    System.out.println("INCORRECT INPUT: Empty input. Please try again.");
+                    continue;
+                }
 
                 int rowIndex = MassRowStamp.parseRowInput(input);
                 if (rowIndex == -1) {
@@ -425,7 +502,12 @@ public class BoxPuzzle {
         private void useMassColumnStamp(MassColumnStamp tool) {
             while (true) {
                 System.out.print("Please enter the column to stamp (e.g., C5 or 5): ");
-                String input = scanner.nextLine().trim();
+                String input = scanner.nextLine();
+
+                if (input == null || input.trim().isEmpty()) {
+                    System.out.println("INCORRECT INPUT: Empty input. Please try again.");
+                    continue;
+                }
 
                 int colIndex = MassColumnStamp.parseColumnInput(input);
                 if (colIndex == -1) {
@@ -446,7 +528,12 @@ public class BoxPuzzle {
         private void useBoxFlipper(BoxFlipper tool) throws UnmovableFixedBoxException {
             while (true) {
                 System.out.print("Please enter the location of the box to use this SpecialTool: ");
-                String location = scanner.nextLine().trim();
+                String location = scanner.nextLine();
+
+                if (location == null || location.trim().isEmpty()) {
+                    System.out.println("INCORRECT INPUT: Empty location. Please try again.");
+                    continue;
+                }
 
                 int[] coords = BoxGrid.parseLocation(location);
                 if (coords == null) {
@@ -467,7 +554,12 @@ public class BoxPuzzle {
         private void useBoxFixer(BoxFixer tool) throws BoxAlreadyFixedException {
             while (true) {
                 System.out.print("Please enter the location of the box to use this SpecialTool: ");
-                String location = scanner.nextLine().trim();
+                String location = scanner.nextLine();
+
+                if (location == null || location.trim().isEmpty()) {
+                    System.out.println("INCORRECT INPUT: Empty location. Please try again.");
+                    continue;
+                }
 
                 int[] coords = BoxGrid.parseLocation(location);
                 if (coords == null) {

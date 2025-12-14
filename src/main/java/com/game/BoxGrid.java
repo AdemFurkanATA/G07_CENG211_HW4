@@ -5,6 +5,7 @@ import com.enums.Direction;
 import com.models.boxes.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
 
 /**
  * ANSWER TO COLLECTIONS QUESTION:
@@ -36,7 +37,8 @@ public class BoxGrid {
     private static final int GRID_SIZE = 8;
 
     // The main data structure: 2D ArrayList storing all 64 boxes
-    private ArrayList<ArrayList<Box>> grid;
+    // SECURITY: Private final to prevent reassignment
+    private final ArrayList<ArrayList<Box>> grid;
 
     /**
      * Constructor for BoxGrid.
@@ -66,7 +68,6 @@ public class BoxGrid {
 
     /**
      * Generates a random box based on probability distribution.
-     *
      * @return A randomly generated Box (RegularBox, UnchangingBox, or FixedBox)
      */
     private Box generateRandomBox() {
@@ -86,7 +87,6 @@ public class BoxGrid {
 
     /**
      * Gets the box at the specified row and column.
-     *
      * @param row Row index (0-7)
      * @param col Column index (0-7)
      * @return The Box at the specified position, or null if out of bounds
@@ -101,47 +101,58 @@ public class BoxGrid {
     /**
      * Sets a box at the specified position.
      * Used when converting boxes (e.g., BoxFixer tool).
-     *
      * @param row Row index (0-7)
      * @param col Column index (0-7)
      * @param box The box to place at this position
+     * @throws IllegalArgumentException if box is null
      */
     public void setBox(int row, int col, Box box) {
-        if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
-            grid.get(row).set(col, box);
+        if (box == null) {
+            throw new IllegalArgumentException("Box cannot be null");
         }
+        if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) {
+            throw new IllegalArgumentException("Invalid grid coordinates: row=" + row + ", col=" + col);
+        }
+        grid.get(row).set(col, box);
     }
 
     /**
      * Checks if a position is on the edge of the grid.
-     *
      * @param row Row index (0-7)
      * @param col Column index (0-7)
      * @return true if the position is on any edge, false otherwise
      */
     public boolean isEdge(int row, int col) {
+        if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) {
+            return false;
+        }
         return row == 0 || row == GRID_SIZE - 1 || col == 0 || col == GRID_SIZE - 1;
     }
 
     /**
      * Checks if a position is in a corner of the grid.
-     *
      * @param row Row index (0-7)
      * @param col Column index (0-7)
      * @return true if the position is in a corner, false otherwise
      */
     public boolean isCorner(int row, int col) {
+        if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) {
+            return false;
+        }
         return (row == 0 || row == GRID_SIZE - 1) && (col == 0 || col == GRID_SIZE - 1);
     }
 
     /**
      * Gets the available directions for rolling from a corner position.
-     *
      * @param row Row index (0-7)
      * @param col Column index (0-7)
-     * @return List of available directions (2 for corners)
+     * @return Unmodifiable list of available directions (2 for corners)
      */
     public List<Direction> getAvailableDirections(int row, int col) {
+        if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) {
+            return Collections.emptyList();
+        }
+
         List<Direction> directions = new ArrayList<>();
 
         if (row == 0 && col == 0) {
@@ -174,19 +185,26 @@ public class BoxGrid {
             directions.add(Direction.LEFT);
         }
 
-        return directions;
+        return Collections.unmodifiableList(directions);
     }
 
     /**
      * Rolls boxes starting from an edge position in the specified direction.
      * Implements the domino-effect: all boxes in the path roll until a FixedBox
      * is encountered or the grid boundary is reached.
-     *
      * @param startRow Starting row index (0-7)
      * @param startCol Starting column index (0-7)
      * @param direction The direction to roll
+     * @throws IllegalArgumentException if parameters are invalid
      */
     public void rollBoxesFromEdge(int startRow, int startCol, Direction direction) {
+        if (startRow < 0 || startRow >= GRID_SIZE || startCol < 0 || startCol >= GRID_SIZE) {
+            throw new IllegalArgumentException("Invalid starting position: row=" + startRow + ", col=" + startCol);
+        }
+        if (direction == null) {
+            throw new IllegalArgumentException("Direction cannot be null");
+        }
+
         int currentRow = startRow;
         int currentCol = startCol;
 
@@ -234,11 +252,15 @@ public class BoxGrid {
 
     /**
      * Counts the number of boxes with the target letter on their top side.
-     *
      * @param targetLetter The letter to count
      * @return The number of boxes with the target letter on top
+     * @throws IllegalArgumentException if targetLetter is null
      */
     public int countTargetLetters(Letter targetLetter) {
+        if (targetLetter == null) {
+            throw new IllegalArgumentException("Target letter cannot be null");
+        }
+
         int count = 0;
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
@@ -253,8 +275,6 @@ public class BoxGrid {
 
     /**
      * Checks if all edge boxes are FixedBoxes.
-     * This is used to detect if the game should end early (no moves possible).
-     *
      * @return true if all edge boxes are FixedBoxes, false otherwise
      */
     public boolean areAllEdgeBoxesFixed() {
@@ -273,7 +293,6 @@ public class BoxGrid {
 
     /**
      * Displays the grid in a formatted table.
-     *
      * @return String representation of the grid
      */
     public String displayGrid() {
@@ -292,7 +311,11 @@ public class BoxGrid {
             sb.append("R").append(row + 1).append(" ");
             for (int col = 0; col < GRID_SIZE; col++) {
                 Box box = getBox(row, col);
-                sb.append(box.toString()).append(" ");
+                if (box != null) {
+                    sb.append(box.toString()).append(" ");
+                } else {
+                    sb.append("| NULL  | ");
+                }
             }
             sb.append("\n");
             sb.append("-".repeat(GRID_SIZE * 10 + 1)).append("\n");
@@ -303,23 +326,22 @@ public class BoxGrid {
 
     /**
      * Parses a location string (e.g., "R1-C2" or "1-2") to row and column indices.
-     *
      * @param location The location string
      * @return int array [row, col] in 0-7 range, or null if invalid
      */
     public static int[] parseLocation(String location) {
-        if (location == null || location.isEmpty()) {
-            return null;
-        }
-
-        String cleaned = location.toUpperCase().replace("R", "").replace("C", "").trim();
-        String[] parts = cleaned.split("-");
-
-        if (parts.length != 2) {
+        if (location == null || location.trim().isEmpty()) {
             return null;
         }
 
         try {
+            String cleaned = location.toUpperCase().replace("R", "").replace("C", "").trim();
+            String[] parts = cleaned.split("-");
+
+            if (parts.length != 2) {
+                return null;
+            }
+
             int row = Integer.parseInt(parts[0].trim()) - 1;
             int col = Integer.parseInt(parts[1].trim()) - 1;
 
@@ -331,5 +353,13 @@ public class BoxGrid {
         }
 
         return null;
+    }
+
+    /**
+     * Gets the grid size constant.
+     * @return The grid size (8)
+     */
+    public static int getGridSize() {
+        return GRID_SIZE;
     }
 }

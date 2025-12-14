@@ -13,38 +13,40 @@ package com.exceptions;
  */
 public class BoxAlreadyFixedException extends Exception {
 
-    private String boxLocation;  // The location of the already-fixed box (e.g., "R3-C8")
+    private static final long serialVersionUID = 1L;
+
+    private final String boxLocation;
 
     /**
      * Constructs a new BoxAlreadyFixedException with a default message.
      */
     public BoxAlreadyFixedException() {
         super("The selected box is already a FixedBox and cannot be fixed again. Continuing to the next turn...");
+        this.boxLocation = null;
     }
 
     /**
      * Constructs a new BoxAlreadyFixedException with a custom message.
-     *
      * @param message The detail message explaining why the exception occurred
      */
     public BoxAlreadyFixedException(String message) {
-        super(message);
+        super(message != null ? message : "The selected box is already a FixedBox and cannot be fixed again. Continuing to the next turn...");
+        this.boxLocation = null;
     }
 
     /**
      * Constructs a new BoxAlreadyFixedException with a custom message and the box location.
-     *
      * @param message The detail message
      * @param boxLocation The location of the already-fixed box (e.g., "R3-C8")
      */
     public BoxAlreadyFixedException(String message, String boxLocation) {
-        super(message);
-        this.boxLocation = boxLocation;
+        super(message != null ? message : "The selected box is already a FixedBox and cannot be fixed again. Continuing to the next turn...");
+
+        this.boxLocation = boxLocation != null ? boxLocation : null;
     }
 
     /**
      * Gets the location of the box that was already fixed.
-     *
      * @return The box location string, or null if not set
      */
     public String getBoxLocation() {
@@ -52,11 +54,23 @@ public class BoxAlreadyFixedException extends Exception {
     }
 
     /**
-     * Sets the location of the box that was already fixed.
-     *
-     * @param boxLocation The box location (e.g., "R3-C8")
+     * Returns a detailed string representation of this exception.
+     * @return String containing exception details
      */
-    public void setBoxLocation(String boxLocation) {
-        this.boxLocation = boxLocation;
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getClass().getName());
+
+        String message = getMessage();
+        if (message != null) {
+            sb.append(": ").append(message);
+        }
+
+        if (boxLocation != null) {
+            sb.append(" [Location: ").append(boxLocation).append("]");
+        }
+
+        return sb.toString();
     }
 }

@@ -13,38 +13,40 @@ package com.exceptions;
  */
 public class EmptyBoxException extends Exception {
 
-    private String boxLocation;  // The location of the empty box (e.g., "R1-C2")
+    private static final long serialVersionUID = 1L;
+
+    private final String boxLocation;
 
     /**
      * Constructs a new EmptyBoxException with a default message.
      */
     public EmptyBoxException() {
         super("BOX IS EMPTY! Continuing to the next turn...");
+        this.boxLocation = null;
     }
 
     /**
      * Constructs a new EmptyBoxException with a custom message.
-     *
      * @param message The detail message explaining why the exception occurred
      */
     public EmptyBoxException(String message) {
-        super(message);
+        super(message != null ? message : "BOX IS EMPTY! Continuing to the next turn...");
+        this.boxLocation = null;
     }
 
     /**
      * Constructs a new EmptyBoxException with a custom message and the box location.
-     *
      * @param message The detail message
      * @param boxLocation The location of the empty box (e.g., "R1-C2")
      */
     public EmptyBoxException(String message, String boxLocation) {
-        super(message);
-        this.boxLocation = boxLocation;
+        super(message != null ? message : "BOX IS EMPTY! Continuing to the next turn...");
+
+        this.boxLocation = boxLocation != null ? boxLocation : null;
     }
 
     /**
      * Gets the location of the box that was empty.
-     *
      * @return The box location string, or null if not set
      */
     public String getBoxLocation() {
@@ -52,11 +54,23 @@ public class EmptyBoxException extends Exception {
     }
 
     /**
-     * Sets the location of the box that was empty.
-     *
-     * @param boxLocation The box location (e.g., "R1-C2")
+     * Returns a detailed string representation of this exception.
+     * @return String containing exception details
      */
-    public void setBoxLocation(String boxLocation) {
-        this.boxLocation = boxLocation;
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getClass().getName());
+
+        String message = getMessage();
+        if (message != null) {
+            sb.append(": ").append(message);
+        }
+
+        if (boxLocation != null) {
+            sb.append(" [Location: ").append(boxLocation).append("]");
+        }
+
+        return sb.toString();
     }
 }

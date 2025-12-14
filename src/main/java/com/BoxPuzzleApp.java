@@ -12,7 +12,7 @@ import com.game.BoxPuzzle;
  * where the goal is to maximize a target letter on the top sides
  * of boxes through rolling and using special tools.
  *
- * @author CENG211 Students
+ * @author Adem Furkan ATA - Erkan Arıkan - Utku Kavzoğlu - İsmail Özkaya
  * @version 1.0
  */
 public class BoxPuzzleApp {
@@ -20,12 +20,17 @@ public class BoxPuzzleApp {
     /**
      * Main method - entry point of the application.
      * Creates and starts a new Box Puzzle game.
-     *
      * @param args Command line arguments (not used)
      */
     public static void main(String[] args) {
-        // Initialize and start the game
-        BoxPuzzle game = new BoxPuzzle();
-        game.start();
+        try {
+            BoxPuzzle game = new BoxPuzzle();
+
+            game.start();
+
+        } catch (Exception e) {
+            System.err.println("An unexpected error occurred: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
