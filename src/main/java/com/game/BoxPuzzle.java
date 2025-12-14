@@ -195,7 +195,7 @@ public class BoxPuzzle {
 
                 coords = BoxGrid.parseLocation(location);
                 if (coords == null) {
-                    System.out.println("INCORRECT INPUT: Invalid location format. Please reenter the location: ");
+                    System.out.print("INCORRECT INPUT: Invalid location format. Please reenter the location: ");
                     continue;
                 }
 
@@ -210,8 +210,14 @@ public class BoxPuzzle {
 
             // Check if it's a FixedBox
             if (!selectedBox.canRoll()) {
+                // Print the automatic roll message first
+                List<Direction> availableDirections = grid.getAvailableDirections(coords[0], coords[1]);
+                if (availableDirections.size() == 1) {
+                    System.out.println("The chosen box is automatically rolled to " + availableDirections.get(0).getDisplayName() + ".");
+                }
+
                 throw new UnmovableFixedBoxException(
-                        "\nHOWEVER, IT IS FIXED BOX AND CANNOT BE MOVED. Continuing to the next turn...",
+                        "HOWEVER, IT IS FIXED BOX AND CANNOT BE MOVED. Continuing to the next turn...",
                         "R" + (coords[0] + 1) + "-C" + (coords[1] + 1),
                         "roll"
                 );
@@ -250,12 +256,25 @@ public class BoxPuzzle {
             // Check if stopped by FixedBox
             boolean stoppedByFixed = checkIfStoppedByFixedBox(coords[0], coords[1], chosenDirection);
 
-            if (stoppedByFixed) {
-                System.out.println("The chosen box and any box on its path have been rolled " +
-                        chosenDirection.getDisplayName() + " until a FixedBox has been reached. The new state of the box grid:");
+            // Determine if this was automatic (non-corner edge box)
+            boolean isAutomatic = availableDirections.size() == 1;
+
+            if (isAutomatic) {
+                if (stoppedByFixed) {
+                    System.out.println("The chosen box is automatically rolled to " + chosenDirection.getDisplayName() +
+                            " until a FixedBox has been reached. The new state of the box grid:");
+                } else {
+                    System.out.println("The chosen box is automatically rolled to " + chosenDirection.getDisplayName() +
+                            ". The new state of the box grid:");
+                }
             } else {
-                System.out.println("The chosen box and any box on its path have been rolled to the " +
-                        chosenDirection.getDisplayName() + ". The new state of the box grid:");
+                if (stoppedByFixed) {
+                    System.out.println("The chosen box and any box on its path have been rolled " +
+                            chosenDirection.getDisplayName() + " until a FixedBox has been reached. The new state of the box grid:");
+                } else {
+                    System.out.println("The chosen box and any box on its path have been rolled to the " +
+                            chosenDirection.getDisplayName() + ". The new state of the box grid:");
+                }
             }
 
             displayGrid();
@@ -305,7 +324,7 @@ public class BoxPuzzle {
 
                 coords = BoxGrid.parseLocation(location);
                 if (coords == null) {
-                    System.out.println("INCORRECT INPUT: Invalid location format. Please reenter the location: ");
+                    System.out.print("INCORRECT INPUT: Invalid location format. Please reenter the location: ");
                     continue;
                 }
 
@@ -320,6 +339,7 @@ public class BoxPuzzle {
             }
 
             // Open the box
+            String location = "R" + (coords[0] + 1) + "-C" + (coords[1] + 1);
             T acquiredTool = (T) selectedBox.open();
 
             if (acquiredTool == null) {
@@ -327,7 +347,6 @@ public class BoxPuzzle {
             }
 
             // Tool acquired
-            String location = "R" + (coords[0] + 1) + "-C" + (coords[1] + 1);
             System.out.println("The box on location " + location + " is opened. It contains a SpecialTool --> " + acquiredTool.getToolName());
 
             // Use the tool immediately

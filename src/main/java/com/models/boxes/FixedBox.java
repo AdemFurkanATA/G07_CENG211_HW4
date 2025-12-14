@@ -2,6 +2,7 @@ package com.models.boxes;
 
 import com.enums.Letter;
 import com.enums.Direction;
+import com.models.tools.SpecialTool;  // ← EKSİK OLAN IMPORT
 
 /**
  * FixedBox is a special box type that cannot be moved or rolled.
