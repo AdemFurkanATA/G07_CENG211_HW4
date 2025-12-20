@@ -16,8 +16,9 @@ import com.exceptions.UnmovableFixedBoxException;
  * IMPORTANT: This tool CANNOT be used on FixedBoxes. Attempting to flip
  * a FixedBox will throw an UnmovableFixedBoxException and waste the turn.
  *
- * UnchangingBoxes CAN be flipped, but since their letters cannot be changed
- * by SpecialTools, they will appear unchanged after flipping.
+ * UnchangingBoxes CAN be flipped. While their internal state changes,
+ * their top side letter will appear unchanged due to UnchangingBox's
+ * special behavior.
  *
  * Example: If a box has 'A' on top and 'B' on bottom, after flipping:
  *          - Top will have 'B'
@@ -36,60 +37,59 @@ public class BoxFlipper extends SpecialTool {
 
     /**
      * Executes the BoxFlipper effect on the grid.
-     * Flips the selected box upside down.
+     *
+     * Note: This method throws UnsupportedOperationException because
+     * BoxFlipper requires specific coordinates to operate.
+     * Use flipBox() method instead with row and column indices.
      *
      * @param grid The BoxGrid on which to execute the tool's effect
-     * @param targetLetter The target letter (not used by BoxFlipper, but required by interface)
-     * @throws Exception if the tool execution fails
+     * @param targetLetter The target letter (not used by BoxFlipper)
+     * @throws UnsupportedOperationException always (use flipBox instead)
      */
     @Override
     protected void execute(BoxGrid grid, Letter targetLetter) throws Exception {
-        // The actual implementation will be completed when we have BoxGrid
-        // This method will:
-        // 1. Ask user for box location via menu (e.g., "R2-C4")
-        // 2. Validate the location
-        // 3. Check if it's a FixedBox (throw exception if so)
-        // 4. Flip the box (swap top and bottom)
-
-        // For now, we'll leave this as a placeholder
-        // The menu system will handle user input and call flipBox()
+        throw new UnsupportedOperationException(
+                "BoxFlipper requires coordinates. Use flipBox() method instead."
+        );
     }
 
-    /**
-     * Flips a box at the specified location upside down.
-     * This is a helper method that will be called from execute() after
-     * getting user input.
-     *
-     * @param grid The BoxGrid to modify
-     * @param row The row index (0-7)
-     * @param col The column index (0-7)
-     * @throws UnmovableFixedBoxException if the box is a FixedBox
-     */
-    public void flipBox(BoxGrid grid, int row, int col) throws UnmovableFixedBoxException {
-        // Validate coordinates
-        if (row < 0 || row > 7 || col < 0 || col > 7) {
-            return;
-        }
-
-        Box box = grid.getBox(row, col);
-
-        if (box == null) {
-            return;
-        }
-
-        // Check if it's a FixedBox
-        if (box instanceof FixedBox) {
-            String location = "R" + (row + 1) + "-C" + (col + 1);
-            throw new UnmovableFixedBoxException(
-                    "Cannot flip a FixedBox! Continuing to the next turn...",
-                    location,
-                    "flip"
-            );
-        }
-
-        // Flip the box (swap top and bottom sides)
-        box.flip();
+/**
+ * Flips a box at the specified location upside down.
+ * Swaps the top and bottom sides of the box.
+ *
+ * @param grid The BoxGrid to modify
+ * @param row The row index (0-7)
+ * @param col The column index (0-7)
+ * @throws IllegalArgumentException if coordinates are invalid or grid is null
+ * @throws UnmovableFixedBoxException if the box is a FixedBox
+ */
+public void flipBox(BoxGrid grid, int row, int col) throws UnmovableFixedBoxException {
+    // Validate inputs
+    if (grid == null) {
+        throw new IllegalArgumentException("Grid cannot be null");
     }
+    validateCoordinates(row, col);
+
+    Box box = grid.getBox(row, col);
+
+    if (box == null) {
+        throw new IllegalArgumentException(
+                "No box found at location: " + formatLocation(row, col)
+        );
+    }
+
+    // Check if it's a FixedBox
+    if (box instanceof FixedBox) {
+        throw new UnmovableFixedBoxException(
+                "Cannot flip a FixedBox! Continuing to the next turn...",
+                formatLocation(row, col),
+                "flip"
+        );
+    }
+
+    // Flip the box (swap top and bottom sides)
+    box.flip();
+}
 
     /**
      * Validates if a box can be flipped.
@@ -101,7 +101,12 @@ public class BoxFlipper extends SpecialTool {
      * @return true if the box can be flipped, false otherwise
      */
     public boolean canFlipBox(BoxGrid grid, int row, int col) {
-        if (row < 0 || row > 7 || col < 0 || col > 7) {
+        if (grid == null) {
+            return false;
+        }
+
+        if (row < MIN_INDEX || row > MAX_INDEX ||
+                col < MIN_INDEX || col > MAX_INDEX) {
             return false;
         }
 
@@ -109,39 +114,5 @@ public class BoxFlipper extends SpecialTool {
 
         // Can't flip null boxes or FixedBoxes
         return box != null && !(box instanceof FixedBox);
-    }
-
-    /**
-     * Parses a box location string to extract row and column indices.
-     * Accepts formats like "R2-C4", "2-4", "r2-c4", etc.
-     *
-     * @param location The location string
-     * @return An int array [row, col] in 0-7 range, or null if invalid
-     */
-    public static int[] parseLocation(String location) {
-        if (location == null || location.isEmpty()) {
-            return null;
-        }
-
-        // Clean and split the input
-        String cleaned = location.toUpperCase().replace("R", "").replace("C", "").trim();
-        String[] parts = cleaned.split("-");
-
-        if (parts.length != 2) {
-            return null;
-        }
-
-        try {
-            int row = Integer.parseInt(parts[0].trim()) - 1;  // Convert to 0-7 index
-            int col = Integer.parseInt(parts[1].trim()) - 1;  // Convert to 0-7 index
-
-            if (row >= 0 && row < 8 && col >= 0 && col < 8) {
-                return new int[]{row, col};
-            }
-        } catch (NumberFormatException e) {
-            return null;
-        }
-
-        return null;
     }
 }
