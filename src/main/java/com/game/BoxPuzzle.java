@@ -80,6 +80,7 @@ public class BoxPuzzle {
                 System.out.println("No moves can be made (all edge boxes are fixed).");
                 gameOver = true;
                 displayGameOver(false);
+                menu.cleanup();
                 return;
             }
 
@@ -109,6 +110,8 @@ public class BoxPuzzle {
         if (!gameOver) {
             displayGameOver(true);
         }
+        // Scanner closed in menu cleanup
+        menu.cleanup();
     }
 
     /**
