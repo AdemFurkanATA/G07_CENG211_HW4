@@ -573,5 +573,10 @@ public class BoxPuzzle {
                 break;
             }
         }
+        public void cleanup() {
+            if (menu != null && menu.scanner != null) {
+                menu.scanner.close();
+            }
+        }
     }
 }

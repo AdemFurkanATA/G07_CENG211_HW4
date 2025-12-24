@@ -12,8 +12,8 @@ package com.enums;
 public enum Direction {
     UP("upwards", -1, 0),
     DOWN("downwards", 1, 0),
-    LEFT("left", 0, -1),
-    RIGHT("right", 0, 1);
+    LEFT("to the left", 0, -1),
+    RIGHT("to the right", 0, 1);
 
     private final String displayName;
     private final int rowDelta;    // Change in row position
