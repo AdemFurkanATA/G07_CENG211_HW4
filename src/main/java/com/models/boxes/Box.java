@@ -20,7 +20,7 @@ import com.models.tools.SpecialTool;
  *
  * Boxes can be rolled, flipped, and stamped depending on their type.
  */
-public abstract class Box {
+public abstract class Box implements Rollable, Stampable {
 
     // Surface indices
     protected static final int TOP = 0;
