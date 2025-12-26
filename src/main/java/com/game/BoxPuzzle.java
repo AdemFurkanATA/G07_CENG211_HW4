@@ -61,57 +61,61 @@ public class BoxPuzzle {
 
     /**
      * Starts and runs the game.
+     * FIXED: Proper resource management with try-finally block
      */
     public void start() {
-        menu.displayWelcome();
-        menu.displayGrid();
+        try {
+            menu.displayWelcome();
+            menu.displayGrid();
 
-        // Main game loop
-        while (currentTurn < MAX_TURNS && !gameOver) {
-            currentTurn++;
+            // Main game loop
+            while (currentTurn < MAX_TURNS && !gameOver) {
+                currentTurn++;
 
-            // Reset rolled status at the start of each turn
-            grid.resetAllRolledStatus();
+                // Reset rolled status at the start of each turn
+                grid.resetAllRolledStatus();
 
-            System.out.println("\n=====> TURN " + currentTurn + ":");
+                System.out.println("\n=====> TURN " + currentTurn + ":");
 
-            // Check if any moves are possible
-            if (grid.areAllEdgeBoxesFixed()) {
-                System.out.println("No moves can be made (all edge boxes are fixed).");
-                gameOver = true;
-                displayGameOver(false);
-                menu.cleanup();
-                return;
+                // Check if any moves are possible
+                if (grid.areAllEdgeBoxesFixed()) {
+                    System.out.println("No moves can be made (all edge boxes are fixed).");
+                    gameOver = true;
+                    displayGameOver(false);
+                    return;  // Early return, finally block will still execute
+                }
+
+                // Optional: View box surfaces
+                menu.offerBoxViewing();
+
+                try {
+                    // Stage 1: Roll boxes from edge
+                    menu.firstStage();
+
+                    // Stage 2: Open box and use tool
+                    menu.secondStage();
+
+                } catch (EmptyBoxException e) {
+                    System.out.println(e.getMessage());
+                    // Turn is wasted, continue to next turn
+                } catch (UnmovableFixedBoxException e) {
+                    System.out.println(e.getMessage());
+                    // Turn is wasted, continue to next turn
+                } catch (BoxAlreadyFixedException e) {
+                    System.out.println(e.getMessage());
+                    // Turn is wasted, continue to next turn
+                }
             }
 
-            // Optional: View box surfaces
-            menu.offerBoxViewing();
-
-            try {
-                // Stage 1: Roll boxes from edge
-                menu.firstStage();
-
-                // Stage 2: Open box and use tool
-                menu.secondStage();
-
-            } catch (EmptyBoxException e) {
-                System.out.println(e.getMessage());
-                // Turn is wasted, continue to next turn
-            } catch (UnmovableFixedBoxException e) {
-                System.out.println(e.getMessage());
-                // Turn is wasted, continue to next turn
-            } catch (BoxAlreadyFixedException e) {
-                System.out.println(e.getMessage());
-                // Turn is wasted, continue to next turn
+            // Game finished successfully (completed all turns)
+            if (!gameOver) {
+                displayGameOver(true);
             }
-        }
 
-        // Game finished successfully (completed all turns)
-        if (!gameOver) {
-            displayGameOver(true);
+        } finally {
+            // ✅ CRITICAL: Always cleanup resources, even if exception occurs
+            menu.cleanup();
         }
-        // Scanner closed in menu cleanup
-        menu.cleanup();
     }
 
     /**
@@ -136,17 +140,21 @@ public class BoxPuzzle {
     /**
      * Inner class that handles all menu operations and user interactions.
      * This demonstrates the use of Inner Classes as required by the assignment.
-     * maintains encapsulation through controlled access
+     * Maintains encapsulation through controlled access.
+     *
+     * SECURITY: Proper resource management for Scanner
      */
     private class GameMenu {
 
         private final Scanner scanner;
+        private boolean isClosed;  // ✅ NEW: Track if scanner is already closed
 
         /**
          * Constructor for GameMenu.
          */
         public GameMenu() {
             this.scanner = new Scanner(System.in);
+            this.isClosed = false;
         }
 
         /**
@@ -170,7 +178,7 @@ public class BoxPuzzle {
          */
         public void offerBoxViewing() {
             System.out.print("---> Do you want to view all surfaces of a box? [1] Yes or [2] No? ");
-            String choice = scanner.nextLine().trim();
+            String choice = getNextLine();  // ✅ FIXED: Use safe method
 
             if (choice.equals("1")) {
                 viewBoxSurfaces();
@@ -185,9 +193,9 @@ public class BoxPuzzle {
         private void viewBoxSurfaces() {
             while (true) {
                 System.out.print("Please enter the location of the box you want to view: ");
-                String location = scanner.nextLine();
+                String location = getNextLine();  // ✅ FIXED: Use safe method
 
-                if (location == null || location.trim().isEmpty()) {
+                if (location.isEmpty()) {
                     System.out.println("INCORRECT INPUT: Empty location. Please try again.");
                     continue;
                 }
@@ -222,9 +230,9 @@ public class BoxPuzzle {
             // Get valid edge box
             while (true) {
                 System.out.print("Please enter the location of the edge box you want to roll: ");
-                String location = scanner.nextLine();
+                String location = getNextLine();  // ✅ FIXED: Use safe method
 
-                if (location == null || location.trim().isEmpty()) {
+                if (location.isEmpty()) {
                     System.out.print("INCORRECT INPUT: Empty location. Please reenter the location: ");
                     continue;
                 }
@@ -248,7 +256,6 @@ public class BoxPuzzle {
 
                 break;
             }
-
 
             // Check if it's a FixedBox
             if (!selectedBox.canRoll()) {
@@ -276,14 +283,12 @@ public class BoxPuzzle {
                         availableDirections.get(1).getDisplayName() + ": ");
 
                 while (true) {
-                    String choice = scanner.nextLine();
+                    String choice = getNextLine();  // ✅ FIXED: Use safe method
 
-                    if (choice == null || choice.trim().isEmpty()) {
+                    if (choice.isEmpty()) {
                         System.out.print("INCORRECT INPUT: Empty choice. Please enter 1 or 2: ");
                         continue;
                     }
-
-                    choice = choice.trim();
 
                     if (choice.equals("1")) {
                         chosenDirection = availableDirections.get(0);
@@ -299,7 +304,6 @@ public class BoxPuzzle {
                 // Edge box - only one direction
                 chosenDirection = availableDirections.get(0);
             }
-
 
             // Roll the boxes
             grid.rollBoxesFromEdge(coords[0], coords[1], chosenDirection);
@@ -374,9 +378,9 @@ public class BoxPuzzle {
             // Get valid rolled box
             while (true) {
                 System.out.print("Please enter the location of the box you want to open: ");
-                String location = scanner.nextLine();
+                String location = getNextLine();  // ✅ FIXED: Use safe method
 
-                if (location == null || location.trim().isEmpty()) {
+                if (location.isEmpty()) {
                     System.out.print("INCORRECT INPUT: Empty location. Please reenter the location: ");
                     continue;
                 }
@@ -401,7 +405,6 @@ public class BoxPuzzle {
 
                 break;
             }
-
 
             // Open the box
             String location = "R" + (coords[0] + 1) + "-C" + (coords[1] + 1);
@@ -453,9 +456,9 @@ public class BoxPuzzle {
         private void usePlusShapeStamp(PlusShapeStamp tool) {
             while (true) {
                 System.out.print("Please enter the location of the box to use this SpecialTool: ");
-                String location = scanner.nextLine();
+                String location = getNextLine();  // ✅ FIXED: Use safe method
 
-                if (location == null || location.trim().isEmpty()) {
+                if (location.isEmpty()) {
                     System.out.println("INCORRECT INPUT: Empty location. Please try again.");
                     continue;
                 }
@@ -479,9 +482,9 @@ public class BoxPuzzle {
         private void useMassRowStamp(MassRowStamp tool) {
             while (true) {
                 System.out.print("Please enter the row to stamp (e.g., R3 or 3): ");
-                String input = scanner.nextLine();
+                String input = getNextLine();  // ✅ FIXED: Use safe method
 
-                if (input == null || input.trim().isEmpty()) {
+                if (input.isEmpty()) {
                     System.out.println("INCORRECT INPUT: Empty input. Please try again.");
                     continue;
                 }
@@ -505,9 +508,9 @@ public class BoxPuzzle {
         private void useMassColumnStamp(MassColumnStamp tool) {
             while (true) {
                 System.out.print("Please enter the column to stamp (e.g., C5 or 5): ");
-                String input = scanner.nextLine();
+                String input = getNextLine();  // ✅ FIXED: Use safe method
 
-                if (input == null || input.trim().isEmpty()) {
+                if (input.isEmpty()) {
                     System.out.println("INCORRECT INPUT: Empty input. Please try again.");
                     continue;
                 }
@@ -531,9 +534,9 @@ public class BoxPuzzle {
         private void useBoxFlipper(BoxFlipper tool) throws UnmovableFixedBoxException {
             while (true) {
                 System.out.print("Please enter the location of the box to use this SpecialTool: ");
-                String location = scanner.nextLine();
+                String location = getNextLine();  // ✅ FIXED: Use safe method
 
-                if (location == null || location.trim().isEmpty()) {
+                if (location.isEmpty()) {
                     System.out.println("INCORRECT INPUT: Empty location. Please try again.");
                     continue;
                 }
@@ -557,9 +560,9 @@ public class BoxPuzzle {
         private void useBoxFixer(BoxFixer tool) throws BoxAlreadyFixedException {
             while (true) {
                 System.out.print("Please enter the location of the box to use this SpecialTool: ");
-                String location = scanner.nextLine();
+                String location = getNextLine();  // ✅ FIXED: Use safe method
 
-                if (location == null || location.trim().isEmpty()) {
+                if (location.isEmpty()) {
                     System.out.println("INCORRECT INPUT: Empty location. Please try again.");
                     continue;
                 }
@@ -576,9 +579,55 @@ public class BoxPuzzle {
                 break;
             }
         }
+
+        /**
+         * ✅ FIXED: Safe method to read next line with proper null/exception handling
+         * Protects against NoSuchElementException when scanner is closed
+         *
+         * @return The next line as a trimmed string, or empty string if error occurs
+         */
+        private String getNextLine() {
+            try {
+                if (isClosed) {
+                    // Scanner already closed - return empty to fail gracefully
+                    return "";
+                }
+
+                if (scanner.hasNextLine()) {
+                    String line = scanner.nextLine();
+                    return line != null ? line.trim() : "";
+                } else {
+                    // No more input available
+                    return "";
+                }
+            } catch (IllegalStateException e) {
+                // Scanner was closed mid-operation
+                System.err.println("WARNING: Scanner was closed unexpectedly");
+                isClosed = true;
+                return "";
+            } catch (Exception e) {
+                // Any other unexpected error
+                System.err.println("ERROR: Unexpected error reading input: " + e.getMessage());
+                return "";
+            }
+        }
+
+        /**
+         * ✅ FIXED: Properly closes the scanner and prevents double-close
+         * This method is idempotent - safe to call multiple times
+         *
+         * SECURITY: Ensures resource is always released
+         */
         public void cleanup() {
-            if (menu != null && menu.scanner != null) {
-                menu.scanner.close();
+            if (!isClosed && scanner != null) {
+                try {
+                    scanner.close();
+                    isClosed = true;
+                } catch (Exception e) {
+                    // Closing scanner should never throw, but handle defensively
+                    System.err.println("WARNING: Error while closing scanner: " + e.getMessage());
+                    isClosed = true;  // Mark as closed anyway
+                }
             }
         }
     }
