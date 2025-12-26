@@ -67,8 +67,6 @@ public abstract class Box implements Rollable, Stampable {
      * Generates random surfaces for the box.
      * Ensures no letter appears more than twice.
      *
-     * SECURITY: Added protection against infinite loop with MAX_ATTEMPTS.
-     *
      * @return Array of 6 randomly generated letters
      */
     protected Letter[] generateRandomSurfaces() {
@@ -87,7 +85,6 @@ public abstract class Box implements Rollable, Stampable {
                 letterIndex = randomLetter.ordinal();
                 attempts++;
 
-                // SECURITY: Prevent infinite loop (though mathematically unlikely)
                 if (attempts >= MAX_ATTEMPTS) {
                     // Fallback: Find first available letter
                     for (int j = 0; j < 8; j++) {
@@ -159,13 +156,10 @@ public abstract class Box implements Rollable, Stampable {
      * Rolls the box in a specified direction.
      * The surfaces rotate according to the direction of the roll.
      *
-     * SECURITY: Added null check for direction parameter.
-     *
      * @param direction The direction to roll (UP, DOWN, LEFT, RIGHT)
      * @throws IllegalArgumentException if direction is null
      */
     public void roll(Direction direction) {
-        // SECURITY: Validate direction is not null
         if (direction == null) {
             throw new IllegalArgumentException("Direction cannot be null");
         }

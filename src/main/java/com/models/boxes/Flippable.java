@@ -11,7 +11,7 @@ import com.enums.Letter;
  *
  * Note: FixedBoxes cannot be flipped (their flip() method does nothing).
  *
- * @author Adem Furkan ATA - Erkan Arıkan - Utku Kavzoğlu - İsmail Özkaya
+ * @author Adem Furkan ATA - Erkan Arıkan
  * @version 1.0
  */
 public interface Flippable {

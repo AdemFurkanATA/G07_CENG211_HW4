@@ -10,7 +10,7 @@ import com.models.tools.SpecialTool;
  * of each turn to acquire SpecialTools. Once opened, a box's contents are
  * removed and it becomes empty.
  *
- * @author Adem Furkan ATA - Erkan Arıkan - Utku Kavzoğlu - İsmail Özkaya
+ * @author Adem Furkan ATA - Erkan Arıkan
  * @version 1.0
  */
 public interface Openable {

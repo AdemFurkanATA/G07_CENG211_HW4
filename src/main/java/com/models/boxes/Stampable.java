@@ -10,7 +10,7 @@ import com.enums.Letter;
  * using various SpecialTools. The actual behavior may vary by implementation
  * (e.g., UnchangingBox ignores stamp operations).
  *
- * @author Adem Furkan ATA - Erkan Arıkan - Utku Kavzoğlu - İsmail Özkaya
+ * @author Adem Furkan ATA - Erkan Arıkan
  * @version 1.0
  */
 public interface Stampable {

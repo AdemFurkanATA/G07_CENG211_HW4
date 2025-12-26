@@ -9,7 +9,7 @@ import com.enums.Direction;
  * Boxes that implement this interface can be rolled in cardinal directions,
  * which changes their surface orientation (like rolling a die).
  *
- * @author Adem Furkan ATA - Erkan Arıkan - Utku Kavzoğlu - İsmail Özkaya
+ * @author Adem Furkan ATA - Erkan Arıkan
  * @version 1.0
  */
 public interface Rollable {
