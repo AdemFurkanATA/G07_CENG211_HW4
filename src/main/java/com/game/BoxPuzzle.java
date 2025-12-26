@@ -316,10 +316,10 @@ public class BoxPuzzle {
 
             if (isAutomatic) {
                 if (stoppedByFixed) {
-                    System.out.println("The chosen box is automatically rolled to " + chosenDirection.getDisplayName() +
+                    System.out.println("The chosen box is automatically rolled " + chosenDirection.getDisplayName() +
                             " until a FixedBox has been reached. The new state of the box grid:");
                 } else {
-                    System.out.println("The chosen box is automatically rolled to " + chosenDirection.getDisplayName() +
+                    System.out.println("The chosen box is automatically rolled " + chosenDirection.getDisplayName() +
                             ". The new state of the box grid:");
                 }
             } else {
@@ -327,7 +327,7 @@ public class BoxPuzzle {
                     System.out.println("The chosen box and any box on its path have been rolled " +
                             chosenDirection.getDisplayName() + " until a FixedBox has been reached. The new state of the box grid:");
                 } else {
-                    System.out.println("The chosen box and any box on its path have been rolled to the " +
+                    System.out.println("The chosen box and any box on its path have been rolled " +
                             chosenDirection.getDisplayName() + ". The new state of the box grid:");
                 }
             }
