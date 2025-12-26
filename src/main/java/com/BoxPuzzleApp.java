@@ -12,7 +12,7 @@ import com.game.BoxPuzzle;
  * where the goal is to maximize a target letter on the top sides
  * of boxes through rolling and using special tools.
  *
- * @author Adem Furkan ATA - Erkan Arıkan - Utku Kavzoğlu - İsmail Özkaya
+ * @author Adem Furkan ATA - Erkan Arıkan - Utku Kavzoğlu
  * @version 1.0
  */
 public class BoxPuzzleApp {
