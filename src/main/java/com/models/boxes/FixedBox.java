@@ -2,7 +2,7 @@ package com.models.boxes;
 
 import com.enums.Letter;
 import com.enums.Direction;
-import com.models.tools.SpecialTool;  // ← EKSİK OLAN IMPORT
+import com.models.tools.SpecialTool;
 
 /**
  * FixedBox is a special box type that cannot be moved or rolled.
@@ -73,12 +73,16 @@ public class FixedBox extends Box {
      * implementation and does nothing. The box remains in its original
      * orientation regardless of the direction parameter.
      *
+     * SECURITY: Intentionally does nothing - this is the correct behavior.
+     * The wasRolledThisTurn flag is NOT set to true.
+     *
      * @param direction The direction to roll (ignored)
      */
     @Override
     public void roll(Direction direction) {
-        // FixedBox cannot be rolled - do nothing
-        // The wasRolledThisTurn flag is NOT set to true
+        // SECURITY: FixedBox explicitly cannot be rolled
+        // Intentionally do nothing - no state change
+        // wasRolledThisTurn remains false
     }
 
     /**
@@ -86,10 +90,13 @@ public class FixedBox extends Box {
      *
      * FixedBoxes cannot be flipped, so this method overrides the parent
      * implementation and does nothing. The top and bottom sides remain unchanged.
+     *
+     * SECURITY: Intentionally does nothing - this is the correct behavior.
      */
     @Override
     public void flip() {
-        // FixedBox cannot be flipped - do nothing
+        // SECURITY: FixedBox explicitly cannot be flipped
+        // Intentionally do nothing - no state change
     }
 
     /**
@@ -138,12 +145,15 @@ public class FixedBox extends Box {
      * FixedBox cannot contain tools, so this method does nothing.
      * This prevents tools from being placed in FixedBoxes.
      *
+     * SECURITY: Intentionally does nothing to enforce invariant.
+     *
      * @param tool The SpecialTool to place inside (ignored)
      */
     @Override
     public void setContainedTool(SpecialTool tool) {
-        // FixedBox cannot contain tools - do nothing
-        // containedTool remains null
+        // SECURITY: FixedBox explicitly cannot contain tools
+        // Intentionally do nothing - containedTool remains null
+        // This enforces the invariant that FixedBox is always empty
     }
 
     /**
