@@ -113,7 +113,6 @@ public class BoxPuzzle {
             }
 
         } finally {
-            // ✅ CRITICAL: Always cleanup resources, even if exception occurs
             menu.cleanup();
         }
     }
@@ -141,13 +140,11 @@ public class BoxPuzzle {
      * Inner class that handles all menu operations and user interactions.
      * This demonstrates the use of Inner Classes as required by the assignment.
      * Maintains encapsulation through controlled access.
-     *
-     * SECURITY: Proper resource management for Scanner
      */
     private class GameMenu {
 
         private final Scanner scanner;
-        private boolean isClosed;  // ✅ NEW: Track if scanner is already closed
+        private boolean isClosed;
 
         /**
          * Constructor for GameMenu.
@@ -178,7 +175,7 @@ public class BoxPuzzle {
          */
         public void offerBoxViewing() {
             System.out.print("---> Do you want to view all surfaces of a box? [1] Yes or [2] No? ");
-            String choice = getNextLine();  // ✅ FIXED: Use safe method
+            String choice = getNextLine();
 
             if (choice.equals("1")) {
                 viewBoxSurfaces();
@@ -193,7 +190,7 @@ public class BoxPuzzle {
         private void viewBoxSurfaces() {
             while (true) {
                 System.out.print("Please enter the location of the box you want to view: ");
-                String location = getNextLine();  // ✅ FIXED: Use safe method
+                String location = getNextLine();
 
                 if (location.isEmpty()) {
                     System.out.println("INCORRECT INPUT: Empty location. Please try again.");
@@ -230,7 +227,7 @@ public class BoxPuzzle {
             // Get valid edge box
             while (true) {
                 System.out.print("Please enter the location of the edge box you want to roll: ");
-                String location = getNextLine();  // ✅ FIXED: Use safe method
+                String location = getNextLine();
 
                 if (location.isEmpty()) {
                     System.out.print("INCORRECT INPUT: Empty location. Please reenter the location: ");
@@ -283,7 +280,7 @@ public class BoxPuzzle {
                         availableDirections.get(1).getDisplayName() + ": ");
 
                 while (true) {
-                    String choice = getNextLine();  // ✅ FIXED: Use safe method
+                    String choice = getNextLine();
 
                     if (choice.isEmpty()) {
                         System.out.print("INCORRECT INPUT: Empty choice. Please enter 1 or 2: ");
@@ -378,7 +375,7 @@ public class BoxPuzzle {
             // Get valid rolled box
             while (true) {
                 System.out.print("Please enter the location of the box you want to open: ");
-                String location = getNextLine();  // ✅ FIXED: Use safe method
+                String location = getNextLine();
 
                 if (location.isEmpty()) {
                     System.out.print("INCORRECT INPUT: Empty location. Please reenter the location: ");
@@ -456,7 +453,7 @@ public class BoxPuzzle {
         private void usePlusShapeStamp(PlusShapeStamp tool) {
             while (true) {
                 System.out.print("Please enter the location of the box to use this SpecialTool: ");
-                String location = getNextLine();  // ✅ FIXED: Use safe method
+                String location = getNextLine();
 
                 if (location.isEmpty()) {
                     System.out.println("INCORRECT INPUT: Empty location. Please try again.");
@@ -482,7 +479,7 @@ public class BoxPuzzle {
         private void useMassRowStamp(MassRowStamp tool) {
             while (true) {
                 System.out.print("Please enter the row to stamp (e.g., R3 or 3): ");
-                String input = getNextLine();  // ✅ FIXED: Use safe method
+                String input = getNextLine();
 
                 if (input.isEmpty()) {
                     System.out.println("INCORRECT INPUT: Empty input. Please try again.");
@@ -508,7 +505,7 @@ public class BoxPuzzle {
         private void useMassColumnStamp(MassColumnStamp tool) {
             while (true) {
                 System.out.print("Please enter the column to stamp (e.g., C5 or 5): ");
-                String input = getNextLine();  // ✅ FIXED: Use safe method
+                String input = getNextLine();
 
                 if (input.isEmpty()) {
                     System.out.println("INCORRECT INPUT: Empty input. Please try again.");
@@ -534,7 +531,7 @@ public class BoxPuzzle {
         private void useBoxFlipper(BoxFlipper tool) throws UnmovableFixedBoxException {
             while (true) {
                 System.out.print("Please enter the location of the box to use this SpecialTool: ");
-                String location = getNextLine();  // ✅ FIXED: Use safe method
+                String location = getNextLine();
 
                 if (location.isEmpty()) {
                     System.out.println("INCORRECT INPUT: Empty location. Please try again.");
@@ -560,7 +557,7 @@ public class BoxPuzzle {
         private void useBoxFixer(BoxFixer tool) throws BoxAlreadyFixedException {
             while (true) {
                 System.out.print("Please enter the location of the box to use this SpecialTool: ");
-                String location = getNextLine();  // ✅ FIXED: Use safe method
+                String location = getNextLine();
 
                 if (location.isEmpty()) {
                     System.out.println("INCORRECT INPUT: Empty location. Please try again.");
@@ -581,7 +578,6 @@ public class BoxPuzzle {
         }
 
         /**
-         * ✅ FIXED: Safe method to read next line with proper null/exception handling
          * Protects against NoSuchElementException when scanner is closed
          *
          * @return The next line as a trimmed string, or empty string if error occurs
@@ -613,10 +609,7 @@ public class BoxPuzzle {
         }
 
         /**
-         * ✅ FIXED: Properly closes the scanner and prevents double-close
          * This method is idempotent - safe to call multiple times
-         *
-         * SECURITY: Ensures resource is always released
          */
         public void cleanup() {
             if (!isClosed && scanner != null) {
