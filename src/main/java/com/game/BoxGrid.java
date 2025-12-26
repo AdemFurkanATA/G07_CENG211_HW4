@@ -35,6 +35,12 @@ import java.util.Collections;
 public class BoxGrid {
 
     private static final int GRID_SIZE = 8;
+    private static final int MIN_INDEX = 0;
+    private static final int MAX_INDEX = 7;
+
+    // Probability constants
+    private static final double REGULAR_BOX_PROBABILITY = 0.85;
+    private static final double UNCHANGING_BOX_PROBABILITY = 0.95; // 0.85 + 0.10
 
     // The main data structure: 2D ArrayList storing all 64 boxes
     // SECURITY: Private final to prevent reassignment
@@ -60,7 +66,12 @@ public class BoxGrid {
         for (int row = 0; row < GRID_SIZE; row++) {
             ArrayList<Box> rowList = new ArrayList<>(GRID_SIZE);
             for (int col = 0; col < GRID_SIZE; col++) {
-                rowList.add(generateRandomBox());
+                Box box = generateRandomBox();
+                // SECURITY: Ensure we never add null boxes
+                if (box == null) {
+                    box = new RegularBox(); // Fallback to RegularBox
+                }
+                rowList.add(box);
             }
             grid.add(rowList);
         }
@@ -68,15 +79,15 @@ public class BoxGrid {
 
     /**
      * Generates a random box based on probability distribution.
-     * @return A randomly generated Box (RegularBox, UnchangingBox, or FixedBox)
+     * @return A randomly generated Box (never null)
      */
     private Box generateRandomBox() {
         double random = Math.random();
 
-        if (random < 0.85) {
+        if (random < REGULAR_BOX_PROBABILITY) {
             // 85% chance for RegularBox
             return new RegularBox();
-        } else if (random < 0.95) {
+        } else if (random < UNCHANGING_BOX_PROBABILITY) {
             // 10% chance for UnchangingBox (0.85 to 0.95)
             return new UnchangingBox();
         } else {
@@ -87,101 +98,176 @@ public class BoxGrid {
 
     /**
      * Gets the box at the specified row and column.
+     * SECURITY: Returns null for invalid coordinates instead of throwing exception.
+     * Caller MUST check for null before using the returned box.
+     *
      * @param row Row index (0-7)
      * @param col Column index (0-7)
      * @return The Box at the specified position, or null if out of bounds
      */
     public Box getBox(int row, int col) {
-        if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) {
+        // SECURITY: Validate bounds before accessing
+        if (!isValidCoordinate(row, col)) {
             return null;
         }
-        return grid.get(row).get(col);
+
+        try {
+            ArrayList<Box> rowList = grid.get(row);
+            if (rowList == null) {
+                return null;
+            }
+            return rowList.get(col);
+        } catch (IndexOutOfBoundsException e) {
+            // Extra safety: catch any unexpected index issues
+            return null;
+        }
+    }
+
+    /**
+     * Gets the box at the specified row and column with exception throwing.
+     * SECURITY: Use this when you need to ensure a box exists.
+     *
+     * @param row Row index (0-7)
+     * @param col Column index (0-7)
+     * @return The Box at the specified position (never null)
+     * @throws IllegalArgumentException if coordinates are invalid or box doesn't exist
+     */
+    public Box getBoxSafe(int row, int col) {
+        if (!isValidCoordinate(row, col)) {
+            throw new IllegalArgumentException(
+                    "Invalid grid coordinates: row=" + row + ", col=" + col +
+                            " (valid range: 0-7)"
+            );
+        }
+
+        Box box = getBox(row, col);
+        if (box == null) {
+            throw new IllegalArgumentException(
+                    "No box found at location: R" + (row + 1) + "-C" + (col + 1)
+            );
+        }
+
+        return box;
     }
 
     /**
      * Sets a box at the specified position.
      * Used when converting boxes (e.g., BoxFixer tool).
+     *
      * @param row Row index (0-7)
      * @param col Column index (0-7)
-     * @param box The box to place at this position
-     * @throws IllegalArgumentException if box is null
+     * @param box The box to place at this position (must not be null)
+     * @throws IllegalArgumentException if parameters are invalid
      */
     public void setBox(int row, int col, Box box) {
+        // SECURITY: Validate all inputs
         if (box == null) {
             throw new IllegalArgumentException("Box cannot be null");
         }
-        if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) {
-            throw new IllegalArgumentException("Invalid grid coordinates: row=" + row + ", col=" + col);
+
+        if (!isValidCoordinate(row, col)) {
+            throw new IllegalArgumentException(
+                    "Invalid grid coordinates: row=" + row + ", col=" + col +
+                            " (valid range: 0-7)"
+            );
         }
-        grid.get(row).set(col, box);
+
+        try {
+            grid.get(row).set(col, box);
+        } catch (IndexOutOfBoundsException e) {
+            throw new IllegalArgumentException(
+                    "Failed to set box at row=" + row + ", col=" + col, e
+            );
+        }
+    }
+
+    /**
+     * Validates if coordinates are within grid bounds.
+     * SECURITY: Centralized validation method.
+     *
+     * @param row Row index
+     * @param col Column index
+     * @return true if coordinates are valid (0-7), false otherwise
+     */
+    private boolean isValidCoordinate(int row, int col) {
+        return row >= MIN_INDEX && row <= MAX_INDEX &&
+                col >= MIN_INDEX && col <= MAX_INDEX;
     }
 
     /**
      * Checks if a position is on the edge of the grid.
+     *
      * @param row Row index (0-7)
      * @param col Column index (0-7)
      * @return true if the position is on any edge, false otherwise
      */
     public boolean isEdge(int row, int col) {
-        if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) {
+        if (!isValidCoordinate(row, col)) {
             return false;
         }
-        return row == 0 || row == GRID_SIZE - 1 || col == 0 || col == GRID_SIZE - 1;
+        return row == MIN_INDEX || row == MAX_INDEX ||
+                col == MIN_INDEX || col == MAX_INDEX;
     }
 
     /**
      * Checks if a position is in a corner of the grid.
+     *
      * @param row Row index (0-7)
      * @param col Column index (0-7)
      * @return true if the position is in a corner, false otherwise
      */
     public boolean isCorner(int row, int col) {
-        if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) {
+        if (!isValidCoordinate(row, col)) {
             return false;
         }
-        return (row == 0 || row == GRID_SIZE - 1) && (col == 0 || col == GRID_SIZE - 1);
+        return (row == MIN_INDEX || row == MAX_INDEX) &&
+                (col == MIN_INDEX || col == MAX_INDEX);
     }
 
     /**
-     * Gets the available directions for rolling from a corner position.
+     * Gets the available directions for rolling from an edge position.
+     *
      * @param row Row index (0-7)
      * @param col Column index (0-7)
-     * @return Unmodifiable list of available directions (2 for corners)
+     * @return Unmodifiable list of available directions (empty if invalid position)
      */
     public List<Direction> getAvailableDirections(int row, int col) {
-        if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) {
+        if (!isValidCoordinate(row, col)) {
             return Collections.emptyList();
         }
 
         List<Direction> directions = new ArrayList<>();
 
-        if (row == 0 && col == 0) {
-            // Top-left corner
+        // Corner cases
+        if (row == MIN_INDEX && col == MIN_INDEX) {
+            // Top-left corner: can roll RIGHT or DOWN
             directions.add(Direction.RIGHT);
             directions.add(Direction.DOWN);
-        } else if (row == 0 && col == GRID_SIZE - 1) {
-            // Top-right corner
+        } else if (row == MIN_INDEX && col == MAX_INDEX) {
+            // Top-right corner: can roll LEFT or DOWN
             directions.add(Direction.LEFT);
             directions.add(Direction.DOWN);
-        } else if (row == GRID_SIZE - 1 && col == 0) {
-            // Bottom-left corner
+        } else if (row == MAX_INDEX && col == MIN_INDEX) {
+            // Bottom-left corner: can roll RIGHT or UP
             directions.add(Direction.RIGHT);
             directions.add(Direction.UP);
-        } else if (row == GRID_SIZE - 1 && col == GRID_SIZE - 1) {
-            // Bottom-right corner
+        } else if (row == MAX_INDEX && col == MAX_INDEX) {
+            // Bottom-right corner: can roll LEFT or UP
             directions.add(Direction.LEFT);
             directions.add(Direction.UP);
-        } else if (row == 0) {
-            // Top edge
+        }
+        // Edge cases (non-corner)
+        else if (row == MIN_INDEX) {
+            // Top edge: can only roll DOWN
             directions.add(Direction.DOWN);
-        } else if (row == GRID_SIZE - 1) {
-            // Bottom edge
+        } else if (row == MAX_INDEX) {
+            // Bottom edge: can only roll UP
             directions.add(Direction.UP);
-        } else if (col == 0) {
-            // Left edge
+        } else if (col == MIN_INDEX) {
+            // Left edge: can only roll RIGHT
             directions.add(Direction.RIGHT);
-        } else if (col == GRID_SIZE - 1) {
-            // Right edge
+        } else if (col == MAX_INDEX) {
+            // Right edge: can only roll LEFT
             directions.add(Direction.LEFT);
         }
 
@@ -192,28 +278,47 @@ public class BoxGrid {
      * Rolls boxes starting from an edge position in the specified direction.
      * Implements the domino-effect: all boxes in the path roll until a FixedBox
      * is encountered or the grid boundary is reached.
+     *
+     * SECURITY: Fixed infinite loop risk and added safety checks.
+     *
      * @param startRow Starting row index (0-7)
      * @param startCol Starting column index (0-7)
-     * @param direction The direction to roll
+     * @param direction The direction to roll (must not be null)
      * @throws IllegalArgumentException if parameters are invalid
      */
     public void rollBoxesFromEdge(int startRow, int startCol, Direction direction) {
-        if (startRow < 0 || startRow >= GRID_SIZE || startCol < 0 || startCol >= GRID_SIZE) {
-            throw new IllegalArgumentException("Invalid starting position: row=" + startRow + ", col=" + startCol);
+        // SECURITY: Validate all inputs
+        if (!isValidCoordinate(startRow, startCol)) {
+            throw new IllegalArgumentException(
+                    "Invalid starting position: row=" + startRow + ", col=" + startCol
+            );
         }
+
         if (direction == null) {
             throw new IllegalArgumentException("Direction cannot be null");
         }
+
+        // SECURITY: Track iteration count to prevent infinite loops
+        int iterationCount = 0;
+        final int MAX_ITERATIONS = GRID_SIZE + 1; // Max possible is 8 boxes in a line
 
         int currentRow = startRow;
         int currentCol = startCol;
 
         // Roll boxes along the path until we hit a FixedBox or boundary
-        while (true) {
+        while (iterationCount < MAX_ITERATIONS) {
+            iterationCount++;
+
+            // SECURITY: Check bounds before accessing
+            if (!isValidCoordinate(currentRow, currentCol)) {
+                break;  // Out of bounds - stop rolling
+            }
+
             Box currentBox = getBox(currentRow, currentCol);
 
             if (currentBox == null) {
-                break;  // Out of bounds
+                // SECURITY: Should never happen but handle gracefully
+                break;
             }
 
             // Check if this box can be rolled
@@ -230,18 +335,25 @@ public class BoxGrid {
             currentCol += direction.getColDelta();
 
             // Check if we've gone out of bounds
-            if (currentRow < 0 || currentRow >= GRID_SIZE || currentCol < 0 || currentCol >= GRID_SIZE) {
+            if (!isValidCoordinate(currentRow, currentCol)) {
                 break;
             }
+        }
+
+        // SECURITY: Log warning if max iterations reached (should never happen)
+        if (iterationCount >= MAX_ITERATIONS) {
+            System.err.println("WARNING: Rolling operation reached maximum iterations. " +
+                    "This may indicate a logic error.");
         }
     }
 
     /**
      * Resets the rolled status for all boxes at the start of a new turn.
+     * SECURITY: Handles null boxes gracefully.
      */
     public void resetAllRolledStatus() {
-        for (int row = 0; row < GRID_SIZE; row++) {
-            for (int col = 0; col < GRID_SIZE; col++) {
+        for (int row = MIN_INDEX; row <= MAX_INDEX; row++) {
+            for (int col = MIN_INDEX; col <= MAX_INDEX; col++) {
                 Box box = getBox(row, col);
                 if (box != null) {
                     box.resetRolledStatus();
@@ -252,8 +364,9 @@ public class BoxGrid {
 
     /**
      * Counts the number of boxes with the target letter on their top side.
-     * @param targetLetter The letter to count
-     * @return The number of boxes with the target letter on top
+     *
+     * @param targetLetter The letter to count (must not be null)
+     * @return The number of boxes with the target letter on top (0-64)
      * @throws IllegalArgumentException if targetLetter is null
      */
     public int countTargetLetters(Letter targetLetter) {
@@ -262,28 +375,37 @@ public class BoxGrid {
         }
 
         int count = 0;
-        for (int row = 0; row < GRID_SIZE; row++) {
-            for (int col = 0; col < GRID_SIZE; col++) {
+
+        for (int row = MIN_INDEX; row <= MAX_INDEX; row++) {
+            for (int col = MIN_INDEX; col <= MAX_INDEX; col++) {
                 Box box = getBox(row, col);
-                if (box != null && box.getTopSide() == targetLetter) {
+
+                // SECURITY: Check for null and null top side
+                if (box != null && box.getTopSide() != null &&
+                        box.getTopSide() == targetLetter) {
                     count++;
                 }
             }
         }
+
         return count;
     }
 
     /**
      * Checks if all edge boxes are FixedBoxes.
+     * Used to determine if the game can continue.
+     *
      * @return true if all edge boxes are FixedBoxes, false otherwise
      */
     public boolean areAllEdgeBoxesFixed() {
-        for (int row = 0; row < GRID_SIZE; row++) {
-            for (int col = 0; col < GRID_SIZE; col++) {
+        for (int row = MIN_INDEX; row <= MAX_INDEX; row++) {
+            for (int col = MIN_INDEX; col <= MAX_INDEX; col++) {
                 if (isEdge(row, col)) {
                     Box box = getBox(row, col);
-                    if (box != null && box.canRoll()) {
-                        return false;  // Found a non-fixed edge box
+
+                    // SECURITY: If box is null or can roll, not all edges are fixed
+                    if (box == null || box.canRoll()) {
+                        return false;
                     }
                 }
             }
@@ -293,30 +415,36 @@ public class BoxGrid {
 
     /**
      * Displays the grid in a formatted table.
-     * @return String representation of the grid
+     * SECURITY: Handles null boxes gracefully.
+     *
+     * @return String representation of the grid (never null)
      */
     public String displayGrid() {
         StringBuilder sb = new StringBuilder();
 
         // Header row
         sb.append("    ");
-        for (int col = 0; col < GRID_SIZE; col++) {
+        for (int col = MIN_INDEX; col <= MAX_INDEX; col++) {
             sb.append("C").append(col + 1).append("       ");
         }
         sb.append("\n");
         sb.append("-".repeat(GRID_SIZE * 10 + 1)).append("\n");
 
         // Grid rows
-        for (int row = 0; row < GRID_SIZE; row++) {
+        for (int row = MIN_INDEX; row <= MAX_INDEX; row++) {
             sb.append("R").append(row + 1).append(" ");
-            for (int col = 0; col < GRID_SIZE; col++) {
+
+            for (int col = MIN_INDEX; col <= MAX_INDEX; col++) {
                 Box box = getBox(row, col);
+
                 if (box != null) {
                     sb.append(box.toString()).append(" ");
                 } else {
+                    // SECURITY: Handle null boxes (should never happen)
                     sb.append("| NULL  | ");
                 }
             }
+
             sb.append("\n");
             sb.append("-".repeat(GRID_SIZE * 10 + 1)).append("\n");
         }
@@ -326,40 +454,101 @@ public class BoxGrid {
 
     /**
      * Parses a location string (e.g., "R1-C2" or "1-2") to row and column indices.
-     * @param location The location string
+     * SECURITY: Comprehensive input validation and error handling.
+     *
+     * @param location The location string (can be null)
      * @return int array [row, col] in 0-7 range, or null if invalid
      */
     public static int[] parseLocation(String location) {
+        // SECURITY: Null and empty check
         if (location == null || location.trim().isEmpty()) {
             return null;
         }
 
         try {
-            String cleaned = location.toUpperCase().replace("R", "").replace("C", "").trim();
+            // SECURITY: Clean input - remove whitespace and convert to uppercase
+            String cleaned = location.trim().toUpperCase();
+
+            // Remove R and C prefixes (case-insensitive)
+            cleaned = cleaned.replace("R", "").replace("C", "");
+
+            // SECURITY: Additional cleaning - remove any remaining whitespace
+            cleaned = cleaned.trim();
+
+            // Split by dash
             String[] parts = cleaned.split("-");
 
             if (parts.length != 2) {
                 return null;
             }
 
-            int row = Integer.parseInt(parts[0].trim()) - 1;
-            int col = Integer.parseInt(parts[1].trim()) - 1;
+            // SECURITY: Trim each part before parsing
+            String rowStr = parts[0].trim();
+            String colStr = parts[1].trim();
 
-            if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
+            // SECURITY: Check for empty parts
+            if (rowStr.isEmpty() || colStr.isEmpty()) {
+                return null;
+            }
+
+            // Parse to integers
+            int row = Integer.parseInt(rowStr) - 1;  // Convert 1-8 to 0-7
+            int col = Integer.parseInt(colStr) - 1;  // Convert 1-8 to 0-7
+
+            // SECURITY: Validate range
+            if (row >= MIN_INDEX && row <= MAX_INDEX &&
+                    col >= MIN_INDEX && col <= MAX_INDEX) {
                 return new int[]{row, col};
             }
+
+            // Out of range
+            return null;
+
         } catch (NumberFormatException e) {
+            // SECURITY: Invalid number format
+            return null;
+        } catch (Exception e) {
+            // SECURITY: Catch any other unexpected errors
             return null;
         }
+    }
 
-        return null;
+    /**
+     * Validates a location string without parsing.
+     * Useful for pre-validation before parsing.
+     *
+     * @param location The location string to validate
+     * @return true if the location string is valid, false otherwise
+     */
+    public static boolean isValidLocationString(String location) {
+        int[] coords = parseLocation(location);
+        return coords != null;
     }
 
     /**
      * Gets the grid size constant.
+     *
      * @return The grid size (8)
      */
     public static int getGridSize() {
         return GRID_SIZE;
+    }
+
+    /**
+     * Gets the minimum valid index.
+     *
+     * @return The minimum index (0)
+     */
+    public static int getMinIndex() {
+        return MIN_INDEX;
+    }
+
+    /**
+     * Gets the maximum valid index.
+     *
+     * @return The maximum index (7)
+     */
+    public static int getMaxIndex() {
+        return MAX_INDEX;
     }
 }
