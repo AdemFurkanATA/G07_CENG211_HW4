@@ -13,7 +13,7 @@ package com.exceptions;
  */
 public class EmptyBoxException extends Exception {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final String boxLocation;
 
@@ -41,8 +41,7 @@ public class EmptyBoxException extends Exception {
      */
     public EmptyBoxException(String message, String boxLocation) {
         super(message != null ? message : "BOX IS EMPTY! Continuing to the next turn...");
-
-        this.boxLocation = boxLocation != null ? boxLocation : null;
+        this.boxLocation = boxLocation;
     }
 
     /**

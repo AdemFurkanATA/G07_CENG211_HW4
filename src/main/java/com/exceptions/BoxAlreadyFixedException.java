@@ -13,7 +13,7 @@ package com.exceptions;
  */
 public class BoxAlreadyFixedException extends Exception {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final String boxLocation;
 
@@ -41,8 +41,7 @@ public class BoxAlreadyFixedException extends Exception {
      */
     public BoxAlreadyFixedException(String message, String boxLocation) {
         super(message != null ? message : "The selected box is already a FixedBox and cannot be fixed again. Continuing to the next turn...");
-
-        this.boxLocation = boxLocation != null ? boxLocation : null;
+        this.boxLocation = boxLocation;
     }
 
     /**

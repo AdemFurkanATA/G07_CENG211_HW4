@@ -15,7 +15,7 @@ package com.exceptions;
  */
 public class UnmovableFixedBoxException extends Exception {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final String boxLocation;
     private final String attemptedAction;
@@ -46,8 +46,7 @@ public class UnmovableFixedBoxException extends Exception {
      */
     public UnmovableFixedBoxException(String message, String boxLocation) {
         super(message != null ? message : "HOWEVER, IT IS FIXED BOX AND CANNOT BE MOVED. Continuing to the next turn...");
-
-        this.boxLocation = boxLocation != null ? boxLocation : null;
+        this.boxLocation = boxLocation;
         this.attemptedAction = null;
     }
 
@@ -59,9 +58,8 @@ public class UnmovableFixedBoxException extends Exception {
      */
     public UnmovableFixedBoxException(String message, String boxLocation, String attemptedAction) {
         super(message != null ? message : "HOWEVER, IT IS FIXED BOX AND CANNOT BE MOVED. Continuing to the next turn...");
-
-        this.boxLocation = boxLocation != null ? boxLocation : null;
-        this.attemptedAction = attemptedAction != null ? attemptedAction : null;
+        this.boxLocation = boxLocation;
+        this.attemptedAction = attemptedAction;
     }
 
     /**
