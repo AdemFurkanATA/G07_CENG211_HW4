@@ -10,10 +10,11 @@ package com.enums;
  * - RIGHT: Rolling to the right (towards C8)
  */
 public enum Direction {
+    // FIX: Changed display names to match PDF output exactly
     UP("upwards", -1, 0),
     DOWN("downwards", 1, 0),
-    LEFT("to the left", 0, -1),
-    RIGHT("to the right", 0, 1);
+    LEFT("left", 0, -1),           // Changed from "to the left"
+    RIGHT("right", 0, 1);          // Changed from "to the right"
 
     private final String displayName;
     private final int rowDelta;    // Change in row position
